@@ -1,131 +1,147 @@
+const express = require('express');
 const { model } = require("mongoose");
-const userEvent = require('../modal/Event');
+const Event = require('../modal/Event');
 const moment = require('moment-timezone');
+const userdetail = require('../modal/User')
 
 
-
-
-// const CreateEvent = async (req, res) => {
-
-//     const { username, title, roomName, StartTime, EndTime, availability } = req.body;
-
-
-//     {
-//         try {
-
-//             // const oldBooking = await userEvent.findOne({roomName})
-
-//             const roomExits = await userEvent.findOne({ availability })
-//             const startTimeAvailble = await userEvent.findOne({ StartTime })
-//             const endTimeAvailble = await userEvent.findOne({ EndTime })
-
-
-
-//             if (roomExits && startTimeAvailble && endTimeAvailble) {
-//                 return res.status(400).json({ message: "Slot is alread booked" })
-//             }
-
-//             const EventResult = await userEvent.create({
-//                 username,
-//                 title,
-//                 roomName,
-//                 StartTime,
-//                 EndTime,
-//                 availability,
-//             });
-
-//             res.status(201).json({ EventResult });
-//         } catch (error) {
-//             res.status(500).json({ message: "Something went Wrong" })
-//             console.log(error)
-
-//         }
-//     }
-
-// };
-
-
+// Create a new event
 const CreateEvent = async (req, res) => {
-
-    const { username, title, roomName, StartTime, EndTime, availability } = req.body;
+    const { username, title, roomName, StartTime, EndTime, availability, User } = req.body;
 
     const startTimeIST = moment.tz(StartTime, 'YYYY-MM-DD HH:mm:ss', 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     const endTimeIST = moment.tz(EndTime, 'YYYY-MM-DD HH:mm:ss', 'UTC').tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
 
 
-    {
-        try {
+    try {
 
+        const roomExits = await Event.findOne({ availability })
+        const startTimeAvailble = await Event.findOne({ StartTime })
+        const endTimeAvailble = await Event.findOne({ EndTime })
 
-            const roomExits = await userEvent.findOne({ availability })
-            const startTimeAvailble = await userEvent.findOne({ StartTime })
-            const endTimeAvailble = await userEvent.findOne({ EndTime })
-
-            // Check if EndTime is less than StartTime
-            if (new Date(EndTime) < new Date(StartTime)) {
-                return res.status(400).json({ message: "EndTime cannot be less than StartTime" })
-            }
-
-            if (roomExits && startTimeAvailble && endTimeAvailble) {
-                return res.status(400).json({ message: "Slot is already booked" })
-            }
-
-            const EventResult = await userEvent.create({
-                username,
-                title,
-                roomName,
-                StartTime: startTimeIST,
-                EndTime: endTimeIST,
-                availability,
-            });
-
-            res.status(201).json({ EventResult });
-        } catch (error) {
-            res.status(500).json({ message: "Something went Wrong" })
-            console.log(error)
-
+        // Check if EndTime is less than StartTime
+        if (new Date(EndTime) < new Date(StartTime)) {
+            return res.status(400).json({ message: "EndTime cannot be less than StartTime" })
         }
+
+        if (roomExits && startTimeAvailble && endTimeAvailble) {
+            return res.status(400).json({ message: "Slot is already booked" })
+        }
+        const event = await Event.create({
+            username,
+            title,
+            roomName,
+            StartTime: startTimeIST,
+            EndTime: endTimeIST,
+            availability,
+            User
+
+        });
+        res.status(201).json({ message: "data posted" })
+
+    } catch (err) {
+        res.status(400).json({ err, message: "somting went wrong" })
+        console.log(err)
     }
-
 };
 
 
 
-
-
-
-
-
-
-
+// Get all events
 const GetEventRoute = async (req, res) => {
-    const allevents = await userEvent.find()
-    res.send(allevents)
-
+    try {
+        const events = await Event.find();
+        res.send(events);
+    } catch (err) {
+        res.status(500).send(err);
+    }
 };
 
+
+
+// const GetUserEvent = async (req, res) => {
+
+//     try {
+
+//         const userId = req.params.id;
+//         console.log(userId)
+//         const user = await userdetail.findById(userId);
+//         console.log(user)
+//         const events = await Event.find({ user: userId }).populate('User');
+//         res.send({
+//             user: user,
+//             events: events
+//         });
+
+//     } catch (err) {
+//         res.status(500).send(err);
+//     }
+// };
 
 const GetUserEvent = async (req, res) => {
-    const _id = req.params.id;
-    const GetUserEvent = await userEvent.findById(_id)
-    res.send(GetUserEvent)
+    console.log(req.params.id)
+    try {
+
+        const userId = req.params.id;
+        console.log(userId)
+        // const user = await userdetail.findById(userId);
+        // const events = await Event.find({ user: userId }).populate('User');
+        // const events =await Event.find({user: userId})
+        const get = {User : userId}
+        const events = await Event.find(get);
+        console.log(events)
+
+        res.send({
+            events: events
+        });
+
+    } catch (err) {
+        res.status(500).send(err);
+    }
 };
 
 
-const DeleteEvent = async (req, res) => {
-    const _id = req.params.id;
-    const DeletedEvent = await userEvent.findByIdAndDelete(_id)
-    res.send(DeletedEvent)
-};
 
 
+
+// Update an event by ID
 const UpdateEvent = async (req, res) => {
-    const _id = req.params.id;
-    const UpdateEvent = await userEvent.findByIdAndUpdate(_id, req.body, { new: true })
-    res.send(UpdateEvent)
+    const updates = Object.keys(req.body);
+    const allowedUpdates = ['username', 'title', 'roomName', 'StartTime', 'EndTime', 'availability'];
+    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+    if (!isValidOperation) {
+        return res.status(400).send({ error: 'Invalid updates!' });
+    }
+    try {
+        const event = await Event.findById(req.params.id);
+        if (!event) {
+            return res.status(404).send();
+        }
+        updates.forEach(update => event[update] = req.body[update]);
+        await event.save();
+        res.send(event);
+    } catch (err) {
+        res.status(400).send(err);
+    }
 };
 
-
-
+// Delete an event by ID
+const DeleteEvent = async (req, res) => {
+    try {
+        const event = await Event.findByIdAndDelete(req.params.id);
+        if (!event) {
+            return res.status(404).send();
+        }
+        res.send(event);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+};
 
 module.exports = { CreateEvent, GetEventRoute, GetUserEvent, DeleteEvent, UpdateEvent, };
+
+
+
+
+
+

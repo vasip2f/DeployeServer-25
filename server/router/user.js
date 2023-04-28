@@ -137,6 +137,8 @@ router.post(
           if (err) throw err;
           res.status(200).json({
             token,
+            user
+
           });
         }
       );

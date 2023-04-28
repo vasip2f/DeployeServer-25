@@ -16,10 +16,13 @@ const userSchema = mongoose.Schema({
     createdAt:{
         type:Date,
         default:Date.now()
-    }
+    },
+    events: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event'
+      }]
 })
 
 
-module.exports = mongoose.model("User" , userSchema)
-
-// 15:37
+const userdetail = mongoose.model("User" , userSchema)
+module.exports = userdetail;

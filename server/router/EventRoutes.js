@@ -9,8 +9,9 @@ const eventroute = require('../controller/EventController');
 EventRoute.post('/create-event', CreateEvent);
 EventRoute.get('/get-events', GetEventRoute);
 EventRoute.get('/getuserevent/:id',GetUserEvent);
-EventRoute.delete('/delete-event/:id', DeleteEvent);
 EventRoute.put('/update-event/:id', UpdateEvent);
+EventRoute.delete('/delete-event/:id', DeleteEvent);
+
 
 
 

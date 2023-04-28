@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [objectId, setObjectId] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   // login function with api
@@ -14,15 +16,22 @@ function Login() {
     const data = {
       email: email,
       password: password,
-    }; 
+      objectId: objectId
+    };
     // axios call
+    localStorage.setItem("email", email)
+    localStorage.setItem("objectId", objectId)
+
     axios
       .post("http://localhost:4000/user/login", data)
       .then((res) => {
         alert("Login Success")
         console.log(res);
-        localStorage.clear();
+        // localStorage.clear();
         localStorage.setItem("token", JSON.stringify(res.data.token));
+        localStorage.setItem('objectId', JSON.stringify(res.data.user['_id']))
+        // const objectId = res.data.user._id;
+        // localStorage.setItem("objectId",objectId);
         navigate("/Dashboard");
       })
       .catch((err) => {
@@ -30,6 +39,11 @@ function Login() {
         console.log(err);
       });
   }
+
+  function toggleShowPassword() {
+    setShowPassword(!showPassword);
+  }
+
   return (
     <div>
       <Navbar />
@@ -43,7 +57,7 @@ function Login() {
 
           <div className="flex flex-col ">
             <label className="text-xl ">𝐄𝐦𝐚𝐢𝐥</label>
-            <input 
+            <input
               onChange={(e) => setEmail(e.target.value)}
               type="text"
               required="Please enter Your Email"
@@ -53,13 +67,22 @@ function Login() {
           </div>
           <div className="flex flex-col ">
             <label className="text-xl ">𝐏𝐚𝐬𝐬𝐰𝐨𝐫𝐝</label>
-            <input
-              onChange={(e) => setPassword(e.target.value)}
-              type="text"
-              required="Please enter Your Password"
-              placeholder="Enter Your Password"
-              className=" border border-zinc-400 outline-none  px-6 py-2 text-black "
-            />
+            <div className="relative">
+              <input
+                onChange={(e) => setPassword(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                required="Please enter Your Password"
+                placeholder="Enter Your Password"
+                className="border border-zinc-400 outline-none px-6 py-2 text-black w-full"
+              />
+              <button
+                type="button"
+                onClick={toggleShowPassword}
+                className="absolute top-1/2 right-2 transform -translate-y-1/2"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
           <button

@@ -4,12 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index",
-    "build": "npm i",
-    "server":"nodemon index",
-    "client":"npm start --prefix client",
-    "dev":"concurrently \"npm run server\" \"npm run client\" "
-
+    "start": "nodemon index",
+    "build": "npm i"
   },
   "keywords": [],
   "author": "",

@@ -7,6 +7,7 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userName, setUserName] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false); // add state for password visibility
 
   const navigate = useNavigate();
 
@@ -30,6 +31,10 @@ function Register() {
         alert("Email is already Exist!")
         console.log(err);
       });
+  }
+  // toggle password visibility state
+  function togglePasswordVisibility() {
+    setPasswordVisible((prev) => !prev);
   }
   return (
     <div>
@@ -61,15 +66,34 @@ function Register() {
               className=" border border-zinc-400 outline-none  px-6 py-2 text-black "
             />
           </div>
-          <div className="flex flex-col ">
+          {/* <div className="flex flex-col ">
             <label className="text-xl ">𝐏𝐚𝐬𝐬𝐰𝐨𝐫𝐝</label>
             <input
               onChange={(e) => setPassword(e.target.value)}
-              type="text"
+              type="password"
               required="Please enter Your Password"
               placeholder="Enter Your Password"
               className=" border border-zinc-400 outline-none  px-6 py-2 text-black "
             />
+          </div> */}
+          <div className="flex flex-col ">
+            <label className="text-xl ">𝐏𝐚𝐬𝐬𝐰𝐨𝐫𝐝</label>
+            <div className="relative">
+              <input
+                onChange={(e) => setPassword(e.target.value)}
+                type={passwordVisible ? "text" : "password"} // show or hide password based on state
+                required="Please enter Your Password"
+                placeholder="Enter Your Password"
+                className="border border-zinc-400 outline-none px-6 py-2 text-black w-full"
+              />
+              <button
+                type="button"
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 mr-2 focus:outline-none"
+                onClick={togglePasswordVisibility}
+              >
+                {passwordVisible ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
           <button

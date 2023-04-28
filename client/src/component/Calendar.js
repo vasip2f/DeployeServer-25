@@ -12,20 +12,21 @@ import *as bootstrap from "bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import 'react-datetime/css/react-datetime.css';
 import NavbarCalendar from '../pages/NavbarCalendar';
+import moment from 'moment-timezone';
 
+export default function (props) {
 
-
-
-
-
-export default function () {
-
-  const [username, setuserName] = useState("");
+  const [username, setuserName] = useState(localStorage.getItem("email").split("@")[0]);
   const [title, setTitle] = useState("");
   const [roomName, setroomName] = useState("Big Room");
   const [StartTime, setStartTime] = useState(new Date());
   const [EndTime, setEndTime] = useState(new Date());
   const [availability, setAvailability] = useState(true);
+
+  const objectId = localStorage.getItem('objectId');
+  const userid = objectId.replace(/^"(.*)"$/, '$1');
+  const [User, setUser] = useState(userid);
+
   const [Data, setData] = useState([]); // store the post data
   const [eventData, setEventData] = useState([]); // store the Display data
   const [RowData, setRowData] = useState([]);
@@ -55,35 +56,64 @@ export default function () {
 
 
 
+  // const handleclick = async (event) => {
+  //   event.preventDefault();
+  //   const payload = {
+  //     username: username,
+  //     title: title,
+  //     roomName: roomName,
+  //     StartTime: new Date(StartTime).toISOString(),
+  //     EndTime: new Date(EndTime).toISOString(),
+  //     availability: availability,
+  //     User: User
+
+  //   }
+  //   const config = { headers: { "Content-Type": "Application/json" } }
+  //   await axios.post('http://localhost:4000/create-event', payload, config)
+
+  //     .then(() => { alert("Event is Confirmed") })
+  //     .catch((e) => { alert("The slot is already booked") })
+  //     .catch((e) => { alert("EndTime cannot be less than StartTime") })
+  //   window.location.reload()
+
+
+  // }
+
   const handleclick = async (event) => {
     event.preventDefault();
     const payload = {
       username: username,
       title: title,
       roomName: roomName,
-      StartTime: StartTime,
-      EndTime: EndTime,
-      availability: availability
+      StartTime: moment(StartTime).tz('Asia/Kolkata').format(),
+      EndTime: moment(EndTime).tz('Asia/Kolkata').format(),
+      availability: availability,
+      User: User
     }
-    const config = { headers: { "Content-Type": "Application/json" } }
-    await axios.post('http://localhost:4000/create-event', payload, config)
-
-      .then(() => { alert("Event is Confirmed") })
-      .catch((e) => { alert("The slot is already booked") })
-    .catch((e) => { alert("EndTime cannot be less than StartTime") })
-    window.location.reload()
-    // .then(() => { console.log("added data from axios") })
-    // .catch((e) => { alert("EndTime cannot be less than StartTime") })
-
+    const config = { headers: { "Content-Type": "application/json" } }
+    try {
+      await axios.post('http://localhost:4000/create-event', payload, config);
+      alert("Event is Confirmed");
+      window.location.reload();
+    } catch (e) {
+      if (e.response.status === 409) {
+        alert("The slot is already booked");
+      } else {
+        alert("The slot is already booked");
+        window.location.reload();
+      }
+    }
   }
 
+  //Calendar Display
   useEffect(() => {
     axios.get('http://localhost:4000/get-events')
       .then((d) => {
         const cdata = d.data.map(item => {
-          return { username: item.username, title: item.title, date: item.StartTime, EndTime }
+          return { username: item.username, title: item.title, date: item.StartTime, EndTime: item.EndTime, User: item.User }
         })
         setData(cdata)
+        console.log(cdata)
       })
       .catch((e) => { console.log(e) })
 
@@ -91,15 +121,39 @@ export default function () {
 
   //this api Display Event 
 
+  // const id = localStorage.getItem('objectId')
+  // let myString = id.replace(/^"(.*)"$/, '$1');
+  // console.log(myString)
+
   useEffect(() => {
-    axios.get('http://localhost:4000/get-events')
+    // const id = localStorage.getItem('objectId')
+    // let myString = id.replace(/^"(.*)"$/, '$1');
+    // console.log(myString)
+    const objectId = localStorage.getItem('objectId');
+    const myString = objectId.replace(/^"(.*)"$/, '$1');
+    console.log("Hello wolld")
+    console.log(myString)
+    axios.get(`http://localhost:4000/getuserevent/${myString}`)
       .then((d) => {
-
-        setEventData(d.data)
+        setEventData(d.data.events)
+        console.log(d)
       })
-      .catch((e) => { console.log(e) })
 
+      .catch((e) => { console.log(e) })
   }, [])
+
+  // useEffect(() => {
+  //   
+  //   axios.get(`http://localhost:4000/get-events/${objectId}`)
+  //     .then((d) => {
+  //       setEventData(d.data)
+  //       console.log(d)
+  //     })
+
+  //     .catch((e) => { console.log(e) })
+  // }, [])
+
+
 
 
 
@@ -108,6 +162,7 @@ export default function () {
     const Credentials = { title, roomName, StartTime, EndTime, availability }
     axios.put(`http://localhost:4000/update-event/${id}`, Credentials)
       .then((d) => {
+
         setData(d.data)
       })
       .catch((e) => { console.log(e) })
@@ -128,7 +183,7 @@ export default function () {
 
   }
 
-
+  console.log(Data)
 
 
 
@@ -141,54 +196,40 @@ export default function () {
         <div className='text-center'>
           <Popup trigger=
             {<Button className='text-black' style={{ backgroundColor: 'skyblue' }}><i className='fa fa-plu'></i>𝐒𝐜𝐡𝐞𝐝𝐮𝐥𝐞 𝐌𝐞𝐞𝐭𝐢𝐧𝐠</Button>}
-            position="bottom right" backgroundColor="black">
+            position="bottom right" backgroundColor="black" >
             <div>
-              {/* <form onSubmit={handleclick} style={{ backgroundColor: "pink" }}>
-
-                            <input placeholder="Enter Your Name" value={username} onChange={e => setuserName(e.target.value)} required='Please enter your Name' />
-                            <input placeholder="Enter Event Title" value={title} onChange={e => setTitle(e.target.value)} required='Please enter your Title' />
-                            <select placeholder="Select Room" value={roomName} onChange={e => setroomName(e.target.value)} required='Please Select your Room'>
-                                <option>Big Room</option>
-                                <option>Small Room</option>
-                                <option>Booth One</option>
-                                <option>Booth Two</option>
-                            </select>
-                            <div>
-                                <label className='text-darkBlack' >StartTime</label>
-                                <Datetime value={StartTime} onChange={date => setStartTime(date)} required='Start time is misiing' />
-                            </div>
-                            <div>
-                                <label className='text-darkBlack'>EndTime</label>
-                                <Datetime value={EndTime} onChange={date => setEndTime(date)} required='End Time is Missing' />
-                            </div>
-                            <button className='text-white' style={{ background: 'gray' }} >Add Event</button>
-                        </form> */}
-
-              {/* <form onSubmit={handleclick} style={{ backgroundColor: "pink" }}>
-                            <input placeholder="Enter Your Name" value={username} onChange={e => setuserName(e.target.value)} required='Please enter your Name' />
-                            <input placeholder="Enter Event Title" value={title} onChange={e => setTitle(e.target.value)} required='Please enter your Title' />
-                            <select placeholder="Select Room" value={roomName} onChange={e => setroomName(e.target.value)} required='Please Select your Room'>
-                                <option>Big Room</option>
-                                <option>Small Room</option>
-                                <option>Booth One</option>
-                                <option>Booth Two</option>
-                            </select>
-                            <div>
-                                <label className='text-darkBlack' >Start and End Time</label>
-                                <Datetime value={[StartTime, EndTime]} onChange={value => { setStartTime(value[0]); setEndTime(value[1]) }} required='Time is missing' range={true} />
-                            </div>
-                            <button className='text-white' style={{ background: 'gray' }}>Add Event</button>
-                        </form> */}
-
               <form onSubmit={handleclick} style={{ backgroundColor: 'pink', padding: '20px', borderRadius: '5px', width: '350px' }}>
-                <label style={{ display: 'block', marginBottom: '10px', color: '#444' }}>Enter Your Name</label>
+                {/* <label style={{ display: 'block', marginBottom: '10px', color: '#444' }}>Hi, {localStorage.getItem("email").split("@")[0]} Please book your Event</label> */}
+                <label style={{ display: 'block', marginBottom: '10px', color: '#444', fontFamily: 'Arial', fontSize: '20px' }}>
+                  Hi, <span style={{ color: '#FF5733', fontWeight: 'bold' }}>{localStorage.getItem("email").split("@")[0]}</span>
+                  <span style={{ color: '#2980B9', fontWeight: 'bold' }}> Please book your Event</span>
+                </label>
                 <input
                   type="text"
                   value={username}
                   onChange={e => setuserName(e.target.value)}
-                  required='please enter your name'
+                  disabled
+                  hidden='true'
                   style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '3px', marginBottom: '15px' }}
                 />
+
+                {/* <input
+                  type="email"
+                  value={localStorage.getItem("email")}
+                  required='please enter your name'
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '3px', marginBottom: '15px' }}
+                  disabled
+                /> */}
+
+                <input
+                  type="text"
+                  value={User}
+                  onChange={e => setUser(e.target.value)}
+                  disabled
+                  hidden='true'
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '3px', marginBottom: '15px' }}
+                />
+
                 <label style={{ display: 'block', marginBottom: '10px', color: '#444' }}>Enter Event Title</label>
                 <input
                   type="text"
@@ -240,6 +281,7 @@ export default function () {
         <section style={{ backgroundColor: 'white' }}>
           <div style={{ position: "relative", zIndex: 0 }}>
             <FullCalendar
+              timeZone="UTC"
               plugins={[dayGridPlugin, timeGridPligin, InteractionPlugin, ListPlugin]}
               initialView="dayGridMonth"
               events={Data}
