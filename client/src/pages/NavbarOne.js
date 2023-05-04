@@ -2,7 +2,8 @@ import { React, useState, useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendar } from "@fortawesome/free-solid-svg-icons";
-import axios from 'axios'
+import axios from 'axios';
+import '../App.css';
 
 
 function NavbarOne() {

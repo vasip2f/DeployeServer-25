@@ -6,7 +6,7 @@ import InteractionPlugin from "@fullcalendar/interaction";
 import ListPlugin from "@fullcalendar/list";
 import Datetime from 'react-datetime';
 import Popup from 'reactjs-popup';
-import { Button, Modal } from 'react-bootstrap';
+import { Button, Form, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import *as bootstrap from "bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -158,8 +158,17 @@ export default function (props) {
 
 
   //Update the Event
-  const handleEdit = () => {
-    const Credentials = { title, roomName, StartTime, EndTime, availability }
+  const handleEdit = (e) => {
+    e.preventDefault();
+    const Credentials = {
+            title,
+            roomName,
+            StartTime: moment(StartTime).tz('Asia/Kolkata').format(),
+            EndTime: moment(EndTime).tz('Asia/Kolkata').format(),
+            availability
+    }
+    console.log(Credentials.StartTime)
+    console.log(Credentials.EndTime)
     axios.put(`http://localhost:4000/update-event/${id}`, Credentials)
       .then((d) => {
 
@@ -482,7 +491,7 @@ export default function (props) {
 
             </Modal.Header>
             <Modal.Body>
-              <div>
+              <form onSubmit={handleEdit}>
                 <div className='form-group'>
                   <lable>Title</lable>
                   <input
@@ -543,8 +552,8 @@ export default function (props) {
                     {/* <Datetime type='text' required="end time is missing" className='form-control' value={EndTime} onChange={(e) => setEndTime(e)} placeholder='Event End Time' defaultValue={RowData.EndTime} /> */}
                   </div>
                 </div>
-                <Button type='submit' style={{ backgroundColor: 'skyblue' }} className='btn btn-warning mt-4' onClick={handleEdit}>Update</Button>
-              </div>
+                <Button type='submit' style={{ backgroundColor: 'skyblue' }} className='btn btn-warning mt-4'>Update</Button>
+              </form>
             </Modal.Body>
             <Modal.Footer>
               <Button variant='secondary' className='text-black' style={{ backgroundColor: 'gray' }} onClick={handleEditClose}>Close</Button>
